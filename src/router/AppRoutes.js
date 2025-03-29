@@ -11,19 +11,54 @@ import Profile from "../pages/Profile";
 import Contact from "../pages/Contact";
 import About from "../pages/About";
 import AdminDashboard from "../pages/admin/AdminDashboard";
-import Promotions from "../pages/admin/Promotions"; // Thêm import
+import Promotions from "../pages/admin/Promotions";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 const AppRoutes = ({ user }) => {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/products" element={<ProductList />} />
-      <Route path="/product/:id" element={<ProductDetail />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute user={user}>
+            <Home />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/products"
+        element={
+          <ProtectedRoute user={user}>
+            <ProductList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/product/:id"
+        element={
+          <ProtectedRoute user={user}>
+            <ProductDetail />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/about" element={<About />} />
+      <Route
+        path="/contact"
+        element={
+          <ProtectedRoute user={user}>
+            <Contact />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/about"
+        element={
+          <ProtectedRoute user={user}>
+            <About />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/cart"
         element={
