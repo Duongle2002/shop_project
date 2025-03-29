@@ -11,7 +11,7 @@ const Home = () => {
       {/* Hero Banner Section */}
       <div className="hero-banner">
         <div className="banner-content">
-          <h1 className="banner-title">Limited Time Offer!</h1>
+          <h1 className="banner-title">Limited Time Offer!!</h1>
           <p className="banner-subtitle">Grab your deal before it’s gone!</p>
           <img src={HomeBanner} alt="Banner" className="banner-image" />
           <Link to="/shop" className="banner-btn">Shop Now</Link>
