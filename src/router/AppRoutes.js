@@ -1,7 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "../pages/Home";
-import ProductList from "../pages/ProductList";
 import ProductDetail from "../pages/ProductDetail";
 import Cart from "../pages/Cart";
 import Checkout from "../pages/Checkout";
@@ -13,6 +12,7 @@ import About from "../pages/About";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import Promotions from "../pages/admin/Promotions";
 import ProtectedRoute from "../components/ProtectedRoute";
+import Products from "../pages/Products";
 
 const AppRoutes = ({ user }) => {
   return (
@@ -20,25 +20,25 @@ const AppRoutes = ({ user }) => {
       <Route
         path="/"
         element={
-          <ProtectedRoute user={user}>
+          // <ProtectedRoute user={user}>
             <Home />
-          </ProtectedRoute>
+          // </ProtectedRoute>
         }
       />
       <Route
         path="/products"
         element={
-          <ProtectedRoute user={user}>
-            <ProductList />
-          </ProtectedRoute>
+          // <ProtectedRoute user={user}>
+            <Products />
+          // </ProtectedRoute>
         }
       />
       <Route
         path="/product/:id"
         element={
-          <ProtectedRoute user={user}>
+          // <ProtectedRoute user={user}>
             <ProductDetail />
-          </ProtectedRoute>
+          // </ProtectedRoute>
         }
       />
       <Route path="/login" element={<Login />} />

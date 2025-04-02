@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
-import { Table, Button, Form, Modal, Pagination } from "react-bootstrap";
+import { collection, getDocs, addDoc, updateDoc, doc } from "firebase/firestore";
+import { Table, Button, Form, Modal, Pagination, Tabs, Tab } from "react-bootstrap";
 import { auth, db } from "../../config/firebase";
 import axios from "axios";
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
+  const [deletedProducts, setDeletedProducts] = useState([]); // Danh sách sản phẩm đã xóa
   const [categories, setCategories] = useState([]);
   const [sellers, setSellers] = useState([]);
   const [newProduct, setNewProduct] = useState({
@@ -23,6 +24,7 @@ const ProductManagement = () => {
   const [imageFile, setImageFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [page, setPage] = useState(1);
+  const [deletedPage, setDeletedPage] = useState(1); // Trang cho tab sản phẩm đã xóa
   const itemsPerPage = 5;
 
   const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/duuzl8vye/image/upload";
@@ -31,12 +33,11 @@ const ProductManagement = () => {
   const fetchData = async () => {
     try {
       const productSnapshot = await getDocs(collection(db, "products"));
-      // Chỉ lấy các sản phẩm chưa bị xóa (is_deleted: false)
-      setProducts(
-        productSnapshot.docs
-          .map((doc) => ({ id: doc.id, ...doc.data() }))
-          .filter((product) => !product.is_deleted) // Lọc sản phẩm chưa bị xóa
-      );
+      const allProducts = productSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      // Lọc sản phẩm chưa xóa
+      setProducts(allProducts.filter((product) => !product.is_deleted));
+      // Lọc sản phẩm đã xóa
+      setDeletedProducts(allProducts.filter((product) => product.is_deleted));
 
       const categorySnapshot = await getDocs(collection(db, "categories"));
       setCategories(categorySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
@@ -121,7 +122,7 @@ const ProductManagement = () => {
         image_url: finalImageUrl || "",
         created_at: new Date().toISOString(),
         is_active: newProduct.is_active,
-        is_deleted: false, // Thêm trường is_deleted khi tạo mới
+        is_deleted: false,
       });
       await addDoc(collection(db, "inventory_logs"), {
         product_id: productRef.id,
@@ -191,11 +192,10 @@ const ProductManagement = () => {
   const handleDeleteProduct = async (id) => {
     if (window.confirm("Are you sure you want to mark this product as deleted?")) {
       try {
-        // Cập nhật is_deleted thành true thay vì xóa
         await updateDoc(doc(db, "products", id), {
           is_deleted: true,
         });
-        await fetchData(); // Fetch lại dữ liệu để cập nhật danh sách
+        await fetchData();
         alert("Product marked as deleted successfully!");
       } catch (error) {
         console.error("Error marking product as deleted:", error);
@@ -203,7 +203,22 @@ const ProductManagement = () => {
     }
   };
 
-  const paginate = (items) => items.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+  const handleRestoreProduct = async (id) => {
+    if (window.confirm("Are you sure you want to restore this product?")) {
+      try {
+        await updateDoc(doc(db, "products", id), {
+          is_deleted: false,
+        });
+        await fetchData();
+        alert("Product restored successfully!");
+      } catch (error) {
+        console.error("Error restoring product:", error);
+      }
+    }
+  };
+
+  const paginate = (items, currentPage) =>
+    items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="container my-5">
@@ -300,64 +315,120 @@ const ProductManagement = () => {
         </div>
       </Form>
 
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Category</th>
-            <th>Seller</th>
-            <th>Image</th>
-            <th>Active</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginate(products).map((product) => (
-            <tr key={product.id}>
-              <td>{product.name}</td>
-              <td>${product.price}</td>
-              <td>{product.stock}</td>
-              <td>{categories.find((cat) => cat.id === product.category_id)?.name || "N/A"}</td>
-              <td>{sellers.find((seller) => seller.id === product.seller_id)?.username || "N/A"}</td>
-              <td>
-                {product.image_url && (
-                  <img src={product.image_url} alt={product.name} style={{ width: "50px" }} />
-                )}
-              </td>
-              <td>{product.is_active ? "Yes" : "No"}</td>
-              <td>
-                <Button
-                  variant="warning"
-                  className="me-2"
-                  onClick={() => {
-                    setEditingProduct(product);
-                    setImagePreview(product.image_url);
-                    setShowModal(true);
-                  }}
-                >
-                  Edit
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => handleDeleteProduct(product.id)}
-                >
-                  Delete
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+      <Tabs defaultActiveKey="active" id="product-tabs" className="mb-3">
+        {/* Tab sản phẩm đang hoạt động */}
+        <Tab eventKey="active" title="Active Products">
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Category</th>
+                <th>Seller</th>
+                <th>Image</th>
+                <th>Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginate(products, page).map((product) => (
+                <tr key={product.id}>
+                  <td>{product.name}</td>
+                  <td>${product.price}</td>
+                  <td>{product.stock}</td>
+                  <td>{categories.find((cat) => cat.id === product.category_id)?.name || "N/A"}</td>
+                  <td>{sellers.find((seller) => seller.id === product.seller_id)?.username || "N/A"}</td>
+                  <td>
+                    {product.image_url && (
+                      <img src={product.image_url} alt={product.name} style={{ width: "50px" }} />
+                    )}
+                  </td>
+                  <td>{product.is_active ? "Yes" : "No"}</td>
+                  <td>
+                    <Button
+                      variant="warning"
+                      className="me-2"
+                      onClick={() => {
+                        setEditingProduct(product);
+                        setImagePreview(product.image_url);
+                        setShowModal(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="danger"
+                      onClick={() => handleDeleteProduct(product.id)}
+                    >
+                      Delete
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
 
-      <Pagination>
-        <Pagination.Prev disabled={page === 1} onClick={() => setPage(page - 1)} />
-        <Pagination.Next
-          disabled={page * itemsPerPage >= products.length}
-          onClick={() => setPage(page + 1)}
-        />
-      </Pagination>
+          <Pagination>
+            <Pagination.Prev disabled={page === 1} onClick={() => setPage(page - 1)} />
+            <Pagination.Next
+              disabled={page * itemsPerPage >= products.length}
+              onClick={() => setPage(page + 1)}
+            />
+          </Pagination>
+        </Tab>
+
+        {/* Tab sản phẩm đã xóa */}
+        <Tab eventKey="deleted" title="Deleted Products">
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Category</th>
+                <th>Seller</th>
+                <th>Image</th>
+                <th>Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginate(deletedProducts, deletedPage).map((product) => (
+                <tr key={product.id}>
+                  <td>{product.name}</td>
+                  <td>${product.price}</td>
+                  <td>{product.stock}</td>
+                  <td>{categories.find((cat) => cat.id === product.category_id)?.name || "N/A"}</td>
+                  <td>{sellers.find((seller) => seller.id === product.seller_id)?.username || "N/A"}</td>
+                  <td>
+                    {product.image_url && (
+                      <img src={product.image_url} alt={product.name} style={{ width: "50px" }} />
+                    )}
+                  </td>
+                  <td>{product.is_active ? "Yes" : "No"}</td>
+                  <td>
+                    <Button
+                      variant="success"
+                      onClick={() => handleRestoreProduct(product.id)}
+                    >
+                      Restore
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+
+          <Pagination>
+            <Pagination.Prev disabled={deletedPage === 1} onClick={() => setDeletedPage(deletedPage - 1)} />
+            <Pagination.Next
+              disabled={deletedPage * itemsPerPage >= deletedProducts.length}
+              onClick={() => setDeletedPage(deletedPage + 1)}
+            />
+          </Pagination>
+        </Tab>
+      </Tabs>
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>

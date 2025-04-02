@@ -1,0 +1,15 @@
+/* src/assets/styles/products.css */
+.products-container {
+    padding: 20px;
+  }
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
