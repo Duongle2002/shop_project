@@ -1,4 +1,3 @@
-// src/pages/Home.js
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { collection, getDocs, query, where } from "firebase/firestore";
@@ -7,6 +6,7 @@ import ProductCard from "../components/ProductCard";
 import "../assets/styles/home.css";
 import HomeBanner from "../assets/images/home.png";
 import PlayStation from "../assets/images/playstation.png";
+import { MDBCarousel, MDBCarouselItem, MDBCarouselCaption } from 'mdb-react-ui-kit';
 
 const Home = () => {
   const [flashSaleProducts, setFlashSaleProducts] = useState([]);
@@ -51,17 +51,45 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      {/* Hero Banner Section */}
-      <div className="hero-banner">
-        <div className="banner-content">
-          <h1 className="banner-title">Limited Time Offer!!</h1>
-          <p className="banner-subtitle">Grab your deal before it’s gone!</p>
-          <img src={HomeBanner} alt="Banner" className="banner-image" />
-          <Link to="/shop" className="banner-btn">
-            Shop Now
-          </Link>
-        </div>
-      </div>
+
+      {/* Carousel Section */}
+      <MDBCarousel showIndicators showControls fade>
+        <MDBCarouselItem itemId={1}>
+          <img
+            src={HomeBanner}
+            className="d-block w-100"
+            alt="First Slide"
+          />
+          <MDBCarouselCaption>
+            <h5>IPHONE 14 PROMAX</h5>
+            <p>Đẳng Cấp Làm Nên Thương Hiệu</p>
+          </MDBCarouselCaption>
+        </MDBCarouselItem>
+
+        <MDBCarouselItem itemId={2}>
+          <img
+            src="https://mdbootstrap.com/img/Photos/Slides/img%20(22).jpg"
+            className="d-block w-100"
+            alt="Second Slide"
+          />
+          <MDBCarouselCaption>
+            <h5>Màn Hình AMOLED THIÊN HÀ</h5>
+            <p>Tận Hưởng Từng Phút Giây Sống Động</p>
+          </MDBCarouselCaption>
+        </MDBCarouselItem>
+
+        <MDBCarouselItem itemId={3}>
+          <img
+            src="https://mdbootstrap.com/img/Photos/Slides/img%20(23).jpg"
+            className="d-block w-100"
+            alt="Third Slide"
+          />
+          <MDBCarouselCaption>
+            <h5>ENJOY A DAY</h5>
+            <p>Thư Giãn Với Dế Yêu Của Bạn</p>
+          </MDBCarouselCaption>
+        </MDBCarouselItem>
+      </MDBCarousel>
 
       {/* Flash Sales Section */}
       <section className="flash-sales">
@@ -82,7 +110,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* New Arrival */}
+      {/* New Arrival Section */}
       <section className="new-arrival">
         <div className="section-header">
           <h2 className="section-title">New Arrivals</h2>
