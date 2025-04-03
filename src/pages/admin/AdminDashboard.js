@@ -10,6 +10,7 @@ import UserManagement from "./UserManagement";
 import ShippingManagement from "./ShippingManagement";
 import InventoryLogManagement from "./InventoryLogManagement";
 import ProductReviewManagement from "./ProductReviewManagement";
+import MessageManagement from "./MessageManagement"; // Import component mới
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("products"); // Mặc định hiển thị Product Management
@@ -37,6 +38,8 @@ const AdminDashboard = () => {
         return <InventoryLogManagement />;
       case "reviews":
         return <ProductReviewManagement />;
+      case "messages": // Thêm case cho messages
+        return <MessageManagement />;
       default:
         return <div>Chọn một mục từ menu để xem nội dung</div>;
     }
@@ -128,6 +131,14 @@ const AdminDashboard = () => {
               className="border-bottom"
             >
               Product Review Management
+            </Nav.Link>
+            <Nav.Link
+              eventKey="messages"
+              onClick={() => setActiveSection("messages")}
+              active={activeSection === "messages"}
+              className="border-bottom"
+            >
+              Message Management
             </Nav.Link>
           </Nav>
         </Col>
