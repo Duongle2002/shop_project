@@ -1,0 +1,79 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Hàm kiểm tra vai trò admin từ Firestore
+    function isAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // Bộ sưu tập users: Người dùng đọc/ghi dữ liệu của chính họ, admin đọc được tất cả
+    match /users/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Bộ sưu tập carts: Người dùng đọc/ghi giỏ hàng của chính họ, admin đọc/ghi tất cả
+    match /carts/{cartId} {
+      allow read: if request.auth != null && (cartId == request.auth.uid || isAdmin());
+      allow write: if request.auth != null && (cartId == request.auth.uid || isAdmin());
+      match /items/{itemId} {
+        allow read: if request.auth != null && (cartId == request.auth.uid || isAdmin());
+        allow create: if request.auth != null && 
+                      (cartId == request.auth.uid || isAdmin()) &&
+                      request.resource.data.product_id is string &&
+                      request.resource.data.quantity is int &&
+                      request.resource.data.quantity > 0 &&
+                      request.resource.data.added_at is string;
+        allow update: if request.auth != null && 
+                       (cartId == request.auth.uid || isAdmin()) &&
+                       request.resource.data.quantity is int &&
+                       request.resource.data.quantity > 0;
+        allow delete: if request.auth != null && (cartId == request.auth.uid || isAdmin());
+      }
+    }
+
+    // Bộ sưu tập products: Ai cũng đọc được, chỉ admin ghi được
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null && isAdmin();
+    }
+
+    // Bộ sưu tập categories: Ai cũng đọc được, chỉ admin ghi được
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null && isAdmin();
+    }
+
+    // Thêm các collection khác (customers, orders, promotions, v.v.) với quyền tương tự
+    match /customers/{customerId} {
+      allow read: if request.auth != null && (customerId == request.auth.uid || isAdmin());
+      allow write: if request.auth != null && (customerId == request.auth.uid || isAdmin());
+    }
+    match /orders/{orderId} {
+      allow read: if request.auth != null && isAdmin();
+      allow write: if request.auth != null && isAdmin();
+    }
+    match /promotions/{promotionId} {
+      allow read: if request.auth != null && isAdmin();
+      allow write: if request.auth != null && isAdmin();
+    }
+    match /shippings/{shippingId} {
+      allow read: if request.auth != null && isAdmin();
+      allow write: if request.auth != null && isAdmin();
+    }
+    match /inventory_logs/{logId} {
+      allow read: if request.auth != null && isAdmin();
+      allow write: if request.auth != null && isAdmin();
+    }
+    match /reviews/{reviewId} {
+      allow read: if request.auth != null && isAdmin();
+      allow write: if request.auth != null && isAdmin();
+    }
+    match /messages/{messageId} {
+      allow read: if request.auth != null && isAdmin();
+      allow write: if request.auth != null && isAdmin();
+    }
+  }
+} 
