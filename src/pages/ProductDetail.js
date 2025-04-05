@@ -50,7 +50,10 @@ const ProductDetail = () => {
           <div key={review.review_id} className="border p-3 mb-3">
             <p>Rating: {review.rating}/5</p>
             <p>{review.comment}</p>
-            <p>Reviewed on: {new Date(review.review_date).toLocaleDateString()}</p>
+            <p>
+              Reviewed on:{" "}
+              {new Date(review.review_date).toLocaleDateString()}
+            </p>
           </div>
         ))
       ) : (

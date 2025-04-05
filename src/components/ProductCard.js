@@ -11,17 +11,23 @@ const ProductCard = ({ product }) => {
         alt={product.name}
         className="product-image"
       />
-      <button className="add-to-cart-btn">Add to Cart</button>
       <p>{product.name}</p>
-      <div className="price">
-        {product.originalPrice && (
-          <span className="original-price">${product.originalPrice}</span>
-        )}
-        <span className={product.originalPrice ? "discounted-price" : ""}>
-          ${product.price || product.discountedPrice || "N/A"}
-        </span>
+      <div className="product-details">
+        <div className="price">
+          {product.originalPrice && (
+            <span className="original-price">${product.originalPrice}</span>
+          )}
+          <span className={product.originalPrice ? "discounted-price" : ""}>
+            ${product.price || product.discountedPrice || "N/A"}
+          </span>
+        </div>
+        <div className="rating">★★★★☆</div>
+        {/* //add to cart button */}
+        <button className="add-to-cart-btn">Add to Cart</button>
+        <Link to={`/product/${product.id}`}>
+          <button className="view-details-btn">View Details</button>
+        </Link>
       </div>
-      <div className="rating">★★★★☆</div> {/* Có thể thay bằng dữ liệu thực */}
     </div>
   );
 };

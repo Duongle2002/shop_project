@@ -1,4 +1,3 @@
-// src/pages/Products.js
 import React, { useState, useEffect } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../config/firebase";
@@ -36,11 +35,12 @@ const Products = () => {
       {/* All Products Section */}
       <div className="products-section">
         <div className="products-header">
-        <h3 className="just-for-you-title">
-          <span className="red-bar"></span> All Products ({products.length})
-        </h3>
+          <h3 className="just-for-you-title">
+            <span className="red-bar"></span> All Products ({products.length})
+          </h3>
           <button className="move-to-bag-btn">MOVE ALL TO BAG</button>
         </div>
+
         <div className="products-grid">
           {products.length > 0 ? (
             products.map((product) => (
@@ -59,31 +59,20 @@ const Products = () => {
         </h3>
         <button className="see-all-btn">SEE ALL</button>
       </div>
+
       <div className="products-grid">
         {products.length > 0 ? (
           products.slice(4, 8).map((product, index) => (
-            <div className="product-item" key={product.id}>
-              {index === 0 && <div className="discount-tag">-35%</div>}
-              {index === 2 && <div className="new-tag">NEW</div>}
-              <img
-                src={product.image || "placeholder.jpg"}
-                alt={product.name}
-              />
-              <p>{product.name}</p>
-              <div className="product-details">
-                {index === 0 ? (
-                  <>
-                    <span className="original-price">$960</span>{" "}
-                    <span className="discounted-price">$1160</span>
-                  </>
-                ) : (
-                  `$${product.price || "N/A"}` // Display price
-                )}
-                <div className="rating">★★★★★ (65)</div>
-              </div>
-              <button className="add-to-cart-btn">Add to Cart</button>
-              <button className="view-details-btn">View Details</button>
-            </div>
+            <ProductCard
+              key={product.id}
+              product={{
+                ...product,
+                discount: index === 0 ? "-35%" : null,
+                newTag: index === 2 ? "NEW" : null,
+                originalPrice: index === 0 ? 960 : null,
+                discountedPrice: index === 0 ? 1160 : product.price,
+              }}
+            />
           ))
         ) : (
           <p>No products available.</p>
