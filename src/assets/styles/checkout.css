@@ -1,0 +1,50 @@
+/* src/assets/styles/checkout.css */
+.checkout-page h2 {
+    margin-bottom: 20px;
+  }
+  
+  .checkout-page h4 {
+    margin-bottom: 15px;
+  }
+  
+  .order-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .order-item:last-child {
+    border-bottom: none;
+  }
+  
+  .checkout-product-image {
+    border-radius: 4px;
+    margin-right: 10px;
+  }
+  
+  .payment-methods {
+    margin-top: 20px;
+  }
+  
+  .payment-icons {
+    margin-top: 5px;
+  }
+  
+  .payment-icon {
+    margin-right: 10px;
+    font-size: 1.2rem;
+    /* Add specific styling for your icons */
+  }
+  
+  .coupon-section {
+    margin-top: 20px;
+  }
+  
+  .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+  }
+  
+  .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+  }
