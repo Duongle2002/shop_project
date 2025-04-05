@@ -14,7 +14,6 @@
   gap: 20px;
 }
 
-/* New Styles for All Products Section */
 .products-section {
   margin-bottom: 40px;
 }
@@ -41,16 +40,21 @@
   border: 1px solid #ddd;
   padding: 10px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 400px; /* Fixed height for better layout */
 }
 
 .product-item img {
   width: 100%;
   height: auto;
-  max-height: 150px;
-  object-fit: contain;
+  object-fit: cover;
+  max-height: 250px;
 }
 
-.discount-tag, .new-tag {
+.discount-tag,
+.new-tag {
   position: absolute;
   top: 10px;
   left: 10px;
@@ -65,14 +69,23 @@
   color: #000;
 }
 
-.add-to-cart-btn {
+.product-details {
+  margin-top: auto; /* Pushes the buttons to the bottom */
+}
+
+.add-to-cart-btn,
+.view-details-btn {
   width: 100%;
   padding: 10px;
   background: #000;
   color: #fff;
   border: none;
   cursor: pointer;
-  margin: 10px 0;
+  margin-top: 10px;
+}
+
+.view-details-btn {
+  background: #333;
 }
 
 .original-price {
