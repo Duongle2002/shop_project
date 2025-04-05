@@ -1,95 +1,52 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "../config/firebase";
-import ProductCard from "../components/ProductCard";
-import "../assets/styles/home.css";
-import HomeBanner from "../assets/images/home.png";
-import PlayStation from "../assets/images/playstation.png";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import '../assets/styles/home.css';
+import HomeBanner from '../assets/images/home.png'; 
+import ProductImage from '../assets/images/product-image.png';
+import PlayStation from '../assets/images/playstation.png';
 import { MDBCarousel, MDBCarouselItem, MDBCarouselCaption } from 'mdb-react-ui-kit';
 
+import phoneIcon from "../assets/icons/phone.png";
+import computerIcon from "../assets/icons/Computer.png";
+import smartWatchIcon from "../assets/icons/SmartWatch.png";
+import cameraIcon from "../assets/icons/Camera.png";
+import gamepad from "../assets/icons/Gamepad.png";
+import headphone from "../assets/icons/Headphone.png";
+const categoryData = [
+  { name: "Phones", icon: phoneIcon },
+  { name: "Computers", icon: computerIcon },
+  { name: "SmartWatch", icon: smartWatchIcon },
+  { name: "HeadPhone", icon: headphone },
+  { name: "GamePad", icon: gamepad },
+];
+
 const Home = () => {
-  const [flashSaleProducts, setFlashSaleProducts] = useState([]);
-  const [newArrivals, setNewArrivals] = useState([]);
-
-  // Lấy dữ liệu từ Firestore
-  const fetchProducts = async () => {
-    try {
-      // Lấy sản phẩm cho Flash Sales (có thể lọc theo điều kiện, ví dụ: giá giảm)
-      const flashSaleQuery = query(
-        collection(db, "products"),
-        where("is_deleted", "==", false),
-        where("is_active", "==", true)
-      );
-      const flashSaleSnapshot = await getDocs(flashSaleQuery);
-      const flashSaleData = flashSaleSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setFlashSaleProducts(flashSaleData.slice(0, 5)); // Lấy 5 sản phẩm đầu tiên
-
-      // Lấy sản phẩm mới (có thể lọc theo created_at mới nhất)
-      const newArrivalQuery = query(
-        collection(db, "products"),
-        where("is_deleted", "==", false),
-        where("is_active", "==", true)
-      );
-      const newArrivalSnapshot = await getDocs(newArrivalQuery);
-      const newArrivalData = newArrivalSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setNewArrivals(newArrivalData.slice(0, 1)); // Lấy 1 sản phẩm mới nhất
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   return (
     <div className="home-container">
-
       {/* Carousel Section */}
       <MDBCarousel showIndicators showControls fade>
         <MDBCarouselItem itemId={1}>
-          <img
-            src={HomeBanner}
-            className="d-block w-100"
-            alt="First Slide"
-          />
+          <img src={HomeBanner} className="d-block w-100" alt="First Slide" />
           <MDBCarouselCaption>
             <h5>IPHONE 14 PROMAX</h5>
             <p>Đẳng Cấp Làm Nên Thương Hiệu</p>
           </MDBCarouselCaption>
         </MDBCarouselItem>
-
-        <MDBCarouselItem itemId={2}>
-          <img
-            src="https://mdbootstrap.com/img/Photos/Slides/img%20(22).jpg"
-            className="d-block w-100"
-            alt="Second Slide"
-          />
-          <MDBCarouselCaption>
-            <h5>Màn Hình AMOLED THIÊN HÀ</h5>
-            <p>Tận Hưởng Từng Phút Giây Sống Động</p>
-          </MDBCarouselCaption>
-        </MDBCarouselItem>
-
-        <MDBCarouselItem itemId={3}>
-          <img
-            src="https://mdbootstrap.com/img/Photos/Slides/img%20(23).jpg"
-            className="d-block w-100"
-            alt="Third Slide"
-          />
-          <MDBCarouselCaption>
-            <h5>ENJOY A DAY</h5>
-            <p>Thư Giãn Với Dế Yêu Của Bạn</p>
-          </MDBCarouselCaption>
-        </MDBCarouselItem>
       </MDBCarousel>
+      
+      {/* Browse By Category */}
+      <section className="categories">
+        <h2 className="section-title">Browse By Category</h2>
+        <div className="category-list">
+          {categoryData.map((category) => (
+            <button key={category.name} className="category-item">
+              <img src={category.icon} alt={category.name} className="category-icon" />
+              {category.name}
+            </button>
+          ))}
+        </div>
+      </section>
+      <br />
 
       {/* Flash Sales Section */}
       <section className="flash-sales">
@@ -100,47 +57,42 @@ const Home = () => {
           </div>
         </div>
         <div className="products-grid">
-          {flashSaleProducts.length > 0 ? (
-            flashSaleProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))
-          ) : (
-            <p>No products available for Flash Sales.</p>
-          )}
+          {[...Array(5)].map((_, index) => (
+            <div className="product-card" key={index}>
+              <img src={ProductImage} alt="Gaming Controller" className="product-image" />
+              <h3 className="product-title">Gaming Controller</h3>
+              <div className="price">
+                <span className="current">$29.99</span>
+                <span className="original">$49.99</span>
+              </div>
+              <div className="rating">★★★★☆</div>
+              <button className="add-to-cart">Add to Cart</button>
+            </div>
+          ))}
         </div>
+        <div className='button-view'><button >VIEW ALL PRODUCTS</button></div>
       </section>
+      
 
-      {/* New Arrival Section */}
+      {/* New Arrival */}
       <section className="new-arrival">
         <div className="section-header">
           <h2 className="section-title">New Arrivals</h2>
-          <Link to="/new-arrivals" className="view-all">
-            View All
-          </Link>
+          <Link to="/new-arrivals" className="view-all">View All</Link>
         </div>
         <div className="arrival-grid">
-          {newArrivals.length > 0 ? (
-            newArrivals.map((product) => (
-              <div key={product.id} className="arrival-item">
-                <img
-                  src={product.image_url || PlayStation}
-                  alt={product.name}
-                  className="arrival-image playstation-image"
-                />
-                <div className="arrival-content">
-                  <h3 className="arrival-title">{product.name}</h3>
-                  <p className="arrival-desc">Experience next-gen gaming</p>
-                  <Link to={`/product/${product.id}`} className="arrival-btn">
-                    Learn More
-                  </Link>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p>No new arrivals available.</p>
-          )}
+          <div className="arrival-item">
+            <img src={PlayStation} alt="PlayStation" className="arrival-image playstation-image" />
+            <div className="arrival-content">
+              <h3 className="arrival-title">PlayStation 5</h3>
+              <p className="arrival-desc">Experience next-gen gaming</p>
+              <Link to="/product/playstation-5" className="arrival-btn">Learn More</Link>
+            </div>
+          </div>
         </div>
+        <div className='button-view'><button >VIEW ALL ARRIVALS</button></div>
       </section>
+      
     </div>
   );
 };
