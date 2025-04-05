@@ -1,15 +1,120 @@
 /* src/assets/styles/products.css */
 .products-container {
-    padding: 20px;
-  }
-  
-  .section-title {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
-  .products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-  }
+  padding: 20px;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+/* New Styles for All Products Section */
+.products-section {
+  margin-bottom: 40px;
+}
+
+.products-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.move-to-bag-btn {
+  padding: 10px 20px;
+  border: 1px solid #000;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: black;
+}
+
+.product-item {
+  position: relative;
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.product-item img {
+  width: 100%;
+  height: auto;
+  max-height: 150px;
+  object-fit: contain;
+}
+
+.discount-tag, .new-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #ff0000;
+  color: black;
+  padding: 5px;
+  font-size: 12px;
+}
+
+.new-tag {
+  background: #00ff00;
+  color: #000;
+}
+
+.add-to-cart-btn {
+  width: 100%;
+  padding: 10px;
+  background: #000;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  margin: 10px 0;
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.discounted-price {
+  color: #ff0000;
+}
+
+.just-for-you-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.just-for-you-title {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+}
+
+.red-bar {
+  width: 10px;
+  height: 20px;
+  background: #ff0000;
+  margin-right: 10px;
+}
+
+.see-all-btn {
+  padding: 10px 20px;
+  border: 1px solid #000;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: black;
+}
+
+.rating {
+  color: #ffa500;
+  font-size: 14px;
+  margin-top: 5px;
+}
