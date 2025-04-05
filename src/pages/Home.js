@@ -68,7 +68,7 @@ const FlashSales = () => {
             <img src={ProductImage} alt="Gaming Controller" className="product-image" />
             <h3 className="product-title">Gaming Controller</h3>
             <div className="price">
-              <span className="current">$29.99</span>
+              <span className="current">$29.999</span>
               <span className="original">$49.99</span>
             </div>
             <div className="rating">★★★★☆</div>
