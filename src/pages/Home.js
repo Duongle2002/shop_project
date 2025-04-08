@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../config/firebase"; // Đảm bảo bạn đã cấu hình file này
 import '../assets/styles/home.css';
 import HomeBanner from '../assets/images/home.png'; 
-import ProductImage from '../assets/images/product-image.png';
 import PlayStation from '../assets/images/playstation.png';
-
 import phoneIcon from "../assets/icons/phone.png";
 import computerIcon from "../assets/icons/Computer.png";
 import smartWatchIcon from "../assets/icons/SmartWatch.png";
@@ -19,13 +19,34 @@ const categoryData = [
   { name: "GamePad", icon: gamepad },
 ];
 
-
-
 // 👉 FlashSales Component
 const FlashSales = () => {
   const endTime = new Date().getTime() + 3600 * 1000;
   const [timeLeft, setTimeLeft] = useState(endTime - new Date().getTime());
+  const [products, setProducts] = useState([]);
 
+  const fetchFlashSaleProducts = async () => {
+    try {
+      const productsQuery = query(
+        collection(db, "flash_sales"),
+        where("is_deleted", "==", false),
+        where("is_active", "==", true),
+      );
+      console.log("Bắt đầu fetch dữ liệu từ Firestore...");
+      const productsSnapshot = await getDocs(productsQuery);
+      console.log("Số document tìm thấy:", productsSnapshot.size);
+      console.log("Dữ liệu thô:", productsSnapshot.docs.map(doc => doc.data()));
+      const productsData = productsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      console.log("Dữ liệu đã xử lý:", productsData);
+      setProducts(productsData);
+    } catch (error) {
+      console.error("Error fetching flash sale products:", error);
+    }
+  };
+  // Timer effect
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date().getTime();
@@ -40,6 +61,11 @@ const FlashSales = () => {
     }, 1000);
 
     return () => clearInterval(timer);
+  }, []);
+
+  // Fetch products effect
+  useEffect(() => {
+    fetchFlashSaleProducts();
   }, []);
 
   const formatTime = (ms) => {
@@ -61,20 +87,29 @@ const FlashSales = () => {
         </div>
       </div>
       <div className="products-grid">
-
-        {/* //danh sách sản phẩm file cứng */}
-        {[...Array(5)].map((_, index) => (
-          <div className="product-card" key={index}>
-            <img src={ProductImage} alt="Gaming Controller" className="product-image" />
-            <h3 className="product-title">Gaming Controller</h3>
-            <div className="price">
-              <span className="current">$29.999</span>
-              <span className="original">$49.99</span>
+        {products.length > 0 ? (
+          products.map((product) => (
+            <div className="product-card" key={product.id}>
+              <img 
+                src={product.imageUrl} // Sử dụng imageUrl từ Firestore
+                alt={product.name} 
+                className="product-image" 
+              />
+              <h3 className="product-title">{product.name}</h3>
+              <div className="price">
+                <span className="current">${product.discountedPrice || product.price}</span>
+                {product.originalPrice && (
+                  <span className="original">${product.originalPrice}</span>
+                )}
+              </div>
+              <div className="rating">{product.rating || '★★★★☆'}</div>
+              
+              <button className="add-to-cart">Shop Now !</button>
             </div>
-            <div className="rating">★★★★☆</div>
-            <button className="add-to-cart">Add to Cart</button>
-          </div>
-        ))}
+          ))
+        ) : (
+          <p>No flash sale products available.</p>
+        )}
       </div>
       <div className="button-view">
         <button>VIEW ALL PRODUCTS</button>
@@ -95,10 +130,6 @@ const Home = () => {
             className="d-block w-100"
             alt="Iphone 14 Pro Max"
           />
-          {/* <div className="carousel-caption">
-            <h5>IPHONE 14 PROMAX</h5>
-            <p>Đẳng Cấp Làm Nên Thương Hiệu</p>
-          </div> */}
         </div>
       </div>
       {/* Categories */}
