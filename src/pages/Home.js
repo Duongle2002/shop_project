@@ -61,7 +61,7 @@ const FlashSales = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [endTime]);
 
   // Fetch products effect
   useEffect(() => {

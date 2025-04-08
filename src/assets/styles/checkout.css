@@ -1,50 +1,92 @@
-/* src/assets/styles/checkout.css */
-.checkout-page h2 {
-    margin-bottom: 20px;
-  }
-  
-  .checkout-page h4 {
-    margin-bottom: 15px;
-  }
-  
-  .order-item {
-    padding: 8px 0;
-    border-bottom: 1px solid #f0f0f0;
-  }
-  
-  .order-item:last-child {
-    border-bottom: none;
-  }
-  
-  .checkout-product-image {
-    border-radius: 4px;
-    margin-right: 10px;
-  }
-  
-  .payment-methods {
-    margin-top: 20px;
-  }
-  
-  .payment-icons {
-    margin-top: 5px;
-  }
-  
-  .payment-icon {
-    margin-right: 10px;
-    font-size: 1.2rem;
-    /* Add specific styling for your icons */
-  }
-  
-  .coupon-section {
-    margin-top: 20px;
-  }
-  
-  .btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
-  }
-  
-  .btn-danger:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
-  }
+.checkout-container {
+  padding: 30px;
+  background: #f9f9f9;
+}
+
+.checkout-grid {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.shipping-form {
+  flex: 1;
+  min-width: 300px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.shipping-form input,
+.shipping-form select {
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.promo-input {
+  display: flex;
+  gap: 10px;
+}
+
+.promo-input input {
+  flex: 1;
+}
+
+.promo-input button {
+  padding: 10px 15px;
+  border: none;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.place-order-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  background-color: #28a745;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.order-summary {
+  flex: 1;
+  min-width: 300px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+}
+
+.summary-line.total {
+  font-size: 18px;
+  font-weight: bold;
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+  margin-top: 20px;
+}
+
+.order-history-title {
+  margin-top: 40px;
+  font-size: 20px;
+  color: #333;
+}
+
+.order-item {
+  margin-top: 10px;
+  font-size: 14px;
+}

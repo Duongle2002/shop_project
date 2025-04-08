@@ -150,10 +150,10 @@ const Cart = () => {
             <Table striped bordered responsive>
               <thead>
                 <tr>
-                  <th>Sản phẩm</th>
-                  <th>Giá</th>
-                  <th>Số lượng</th>
-                  <th>Tổng</th>
+                  <th>Products</th>
+                  <th>Value</th>
+                  <th>Quantity</th>
+                  <th>Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -176,7 +176,7 @@ const Cart = () => {
                         </div>
                       </div>
                     </td>
-                    <td>{item.product?.price?.toLocaleString() || 0}đ</td>
+                    <td>{item.product?.price?.toLocaleString() || 0}$</td>
                     <td>
                       <div className="quantity-controls">
                         <Button
@@ -208,7 +208,7 @@ const Cart = () => {
                       </div>
                     </td>
                     <td>
-                      {((item.product?.price || 0) * item.quantity).toLocaleString()}đ
+                      {((item.product?.price || 0) * item.quantity).toLocaleString()}$
                       <Button
                         variant="danger"
                         size="sm"
@@ -223,14 +223,14 @@ const Cart = () => {
               </tbody>
             </Table>
 
-            <div className="cart-actions-top">
-              <Button variant="outline-secondary" onClick={() => navigate("/")}>
-                Tiếp tục mua sắm
-              </Button>
-              <Button variant="primary" onClick={() => /* Handle update cart logic */ {}}>
-                Cập nhật giỏ hàng
-              </Button>
-            </div>
+            <div className="cart-actions-top d-flex justify-content-between">
+           <Button variant="outline-secondary" onClick={() => navigate("/")}>
+             Continue shopping
+           </Button>
+           <Button variant="primary" onClick={() => {/* Handle update cart logic */}}>
+              Update shopping cart
+           </Button>
+          </div>
 
             <div className="coupon-section">
               <Form.Control
@@ -250,7 +250,7 @@ const Cart = () => {
               <h3>Cart Total</h3>
               <div className="summary-item">
                 <span>Subtotal:</span>
-                <span>{calculateSubtotal().toLocaleString()}đ</span>
+                <span>{calculateSubtotal().toLocaleString()}$</span>
               </div>
               <div className="summary-item">
                 <span>Shipping:</span>
@@ -259,12 +259,12 @@ const Cart = () => {
               {discountApplied && (
                 <div className="summary-item discount">
                   <span>Discount (10%):</span>
-                  <span>-{(calculateSubtotal() * 0.1).toLocaleString()}đ</span>
+                  <span>-{(calculateSubtotal() * 0.1).toLocaleString()}$</span>
                 </div>
               )}
               <div className="summary-item total">
                 <span>Total:</span>
-                <span>{calculateTotal().toLocaleString()}đ</span>
+                <span>{calculateTotal().toLocaleString()}$</span>
               </div>
               <Button variant="danger" onClick={() => navigate("/checkout")} className="checkout-button">
                 Proceed to checkout
