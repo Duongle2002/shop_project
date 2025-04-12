@@ -30,11 +30,11 @@ const NavigationBar = ({ user }) => {
           <Dropdown.Toggle variant="dark" id="dropdown-basic">
             {currentLanguage === 'en' ? 'English' : 'Tiếng Việt'}
           </Dropdown.Toggle>
-          <Dropdown.Menu>
+          {/* <Dropdown.Menu>
             <Dropdown.Item onClick={() => toggleLanguage()}>
               {currentLanguage === 'en' ? 'Tiếng Việt' : 'English'}
             </Dropdown.Item>
-          </Dropdown.Menu>
+          </Dropdown.Menu> */}
         </Dropdown>
       </div>
 
@@ -77,7 +77,7 @@ const NavigationBar = ({ user }) => {
             </Nav>
 
             <div className="d-flex align-items-center">
-              <Form className="d-flex me-3">
+              {/* <Form className="d-flex me-3">
                 <FormControl
                   type="search"
                   placeholder={t('navbar.search')}
@@ -86,7 +86,7 @@ const NavigationBar = ({ user }) => {
                 <Button variant="outline-secondary">
                   <FaSearch />
                 </Button>
-              </Form>
+              </Form> */}
 
               <Nav className="me-3">
                 <Nav.Link as={Link} to="/wishlist" title={t('navbar.wishlist')}>

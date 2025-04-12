@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from "../config/firebase"; // Đảm bảo bạn đã cấu hình file này
+import { db } from "../config/firebase"; 
 import '../assets/styles/home.css';
 import HomeBanner from '../assets/images/home.png'; 
 import PlayStation from '../assets/images/playstation.png';
