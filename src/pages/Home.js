@@ -104,7 +104,7 @@ const FlashSales = () => {
               </div>
               <div className="rating">{product.rating || '★★★★☆'}</div>
               
-              <button className="add-to-cart">Shop Now !</button>
+              <button className="add-to-cart"><a href='/products'>Shop Now !</a></button>
             </div>
           ))
         ) : (
@@ -159,13 +159,13 @@ const Home = () => {
             <div className="arrival-content">
               <h3 className="arrival-title">PlayStation 5</h3>
               <p className="arrival-desc">Experience next-gen gaming</p>
-              <Link to="/product/playstation-5" className="arrival-btn">Learn More</Link>
+              {/* <Link to="/product/playstation-5" className="arrival-btn">Learn More</Link> */}
             </div>
           </div>
         </div>
-        <div className="button-view">
+        {/* <div className="button-view">
           <button>VIEW ALL ARRIVALS</button>
-        </div>
+        </div> */}
       </section>
     </div>
   );
