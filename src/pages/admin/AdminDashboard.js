@@ -46,10 +46,35 @@ const AdminDashboard = () => {
   };
 
   return (
-    <Container>
+    <>
+    <style>
+        {`
+          .nav-link.active {
+            background-color: #007bff;
+            color: white !important;
+            font-weight: bold;
+            border-radius: 5px;
+          }
+          .nav-link {
+            color: #333;
+            transition: all 0.3s ease;
+          }
+          .nav-link:hover {
+            background-color: #f8f9fa;
+            color: #007bff;
+          }
+          .nav-link.border-bottom {
+            border-bottom: 1px solid #dee2e6;
+          }
+          .nav-link.active.border-bottom {
+            border-bottom: none;
+          }
+        `}
+      </style>
+    <>
       <Row>
         {/* Sidebar bên trái */}
-        <Col md={3} lg={3} className="bg-light vh-100 p-3" style={{ position: "sticky", top: 0 }}>
+        <Col md={2} lg={2} className="bg-light vh-100 p-3" style={{ position: "sticky", top: 0 }}>
           <h2 className="mb-4">Admin Dashboard</h2>
           <Nav className="flex-column">
             <Nav.Link
@@ -144,11 +169,12 @@ const AdminDashboard = () => {
         </Col>
 
         {/* Nội dung bên phải */}
-        <Col md={9} lg={9} className="p-3">
+        <Col md={10} lg={10} className="p-1">
           {renderContent()}
         </Col>
       </Row>
-    </Container>
+    </>
+    </>
   );
 };
 

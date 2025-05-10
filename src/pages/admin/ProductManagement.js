@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { collection, getDocs, addDoc, updateDoc, doc } from "firebase/firestore";
-import { Table, Button, Form, Modal, Pagination, Tabs, Tab } from "react-bootstrap";
+import {
+  Table,
+  Button,
+  Form,
+  Modal,
+  Pagination,
+  Tabs,
+  Tab,
+  OverlayTrigger,
+  Tooltip,
+} from "react-bootstrap";
 import { auth, db } from "../../config/firebase";
 import axios from "axios";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import "../../assets/styles/productManagement.css"
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
-  const [deletedProducts, setDeletedProducts] = useState([]); // Danh sách sản phẩm đã xóa
+  const [deletedProducts, setDeletedProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [sellers, setSellers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [newProduct, setNewProduct] = useState({
     name: "",
     price: "",
@@ -16,6 +30,7 @@ const ProductManagement = () => {
     category_id: "",
     seller_id: "",
     image_url: "",
+    description: "",
     is_active: true,
   });
   const [editingProduct, setEditingProduct] = useState(null);
@@ -23,20 +38,34 @@ const ProductManagement = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Trạng thái loading dữ liệu
   const [page, setPage] = useState(1);
-  const [deletedPage, setDeletedPage] = useState(1); // Trang cho tab sản phẩm đã xóa
+  const [deletedPage, setDeletedPage] = useState(1);
   const itemsPerPage = 5;
 
   const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/duuzl8vye/image/upload";
   const UPLOAD_PRESET = "shop_project";
 
+  // Cấu hình toolbar cho ReactQuill
+  const quillModules = {
+    toolbar: [
+      [{ header: [1, 2, false] }],
+      ["bold", "italic", "underline"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["link"],
+      ["clean"],
+    ],
+  };
+
   const fetchData = async () => {
     try {
+      setIsLoading(true);
       const productSnapshot = await getDocs(collection(db, "products"));
-      const allProducts = productSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      // Lọc sản phẩm chưa xóa
+      const allProducts = productSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setProducts(allProducts.filter((product) => !product.is_deleted));
-      // Lọc sản phẩm đã xóa
       setDeletedProducts(allProducts.filter((product) => product.is_deleted));
 
       const categorySnapshot = await getDocs(collection(db, "categories"));
@@ -47,6 +76,9 @@ const ProductManagement = () => {
       setSellers(allUsers.filter((user) => user.role === "admin" || user.role === "seller"));
     } catch (error) {
       console.error("Error fetching data:", error);
+      alert("Failed to load data. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -63,11 +95,10 @@ const ProductManagement = () => {
     try {
       setIsUploading(true);
       const response = await axios.post(CLOUDINARY_URL, formData);
-      console.log("Cloudinary response:", response.data);
       return response.data.secure_url;
     } catch (error) {
       console.error("Error uploading to Cloudinary:", error.response?.data || error.message);
-      alert("Failed to upload image to Cloudinary. Check console for details.");
+      alert("Failed to upload image to Cloudinary.");
       return null;
     } finally {
       setIsUploading(false);
@@ -120,6 +151,7 @@ const ProductManagement = () => {
         price: parseFloat(newProduct.price),
         stock: parseInt(newProduct.stock),
         image_url: finalImageUrl || "",
+        description: newProduct.description || "",
         created_at: new Date().toISOString(),
         is_active: newProduct.is_active,
         is_deleted: false,
@@ -139,6 +171,7 @@ const ProductManagement = () => {
         category_id: "",
         seller_id: "",
         image_url: "",
+        description: "",
         is_active: true,
       });
       setImagePreview(null);
@@ -146,6 +179,7 @@ const ProductManagement = () => {
       alert("Product added successfully!");
     } catch (error) {
       console.error("Error adding product:", error);
+      alert("Failed to add product.");
     }
   };
 
@@ -169,6 +203,7 @@ const ProductManagement = () => {
       await updateDoc(doc(db, "products", editingProduct.id), {
         ...editingProduct,
         image_url: finalImageUrl || editingProduct.image_url,
+        description: editingProduct.description || "",
       });
       if (editingProduct.stock !== oldProduct.stock) {
         await addDoc(collection(db, "inventory_logs"), {
@@ -186,6 +221,7 @@ const ProductManagement = () => {
       alert("Product updated successfully!");
     } catch (error) {
       console.error("Error updating product:", error);
+      alert("Failed to update product.");
     }
   };
 
@@ -199,6 +235,7 @@ const ProductManagement = () => {
         alert("Product marked as deleted successfully!");
       } catch (error) {
         console.error("Error marking product as deleted:", error);
+        alert("Failed to delete product.");
       }
     }
   };
@@ -213,16 +250,47 @@ const ProductManagement = () => {
         alert("Product restored successfully!");
       } catch (error) {
         console.error("Error restoring product:", error);
+        alert("Failed to restore product.");
       }
     }
   };
 
+  // Lọc sản phẩm theo tìm kiếm
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.replace(/<[^>]+>/g, "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredDeletedProducts = deletedProducts.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.replace(/<[^>]+>/g, "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const paginate = (items, currentPage) =>
     items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  // Nếu đang tải dữ liệu, hiển thị spinner
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="container my-5">
       <h3>Product Management</h3>
+      <Form.Control
+        type="text"
+        placeholder="Search by name or description"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="mb-3"
+        style={{ maxWidth: "300px" }}
+      />
       <Form onSubmit={handleAddProduct} className="mb-4">
         <div className="row">
           <div className="col-md-2">
@@ -299,6 +367,15 @@ const ProductManagement = () => {
               />
             )}
           </div>
+          <div className="col-md-4">
+            <Form.Label>Description</Form.Label>
+            <ReactQuill
+              value={newProduct.description}
+              onChange={(value) => setNewProduct({ ...newProduct, description: value })}
+              modules={quillModules}
+              style={{ height: "100px", marginBottom: "40px" }}
+            />
+          </div>
           <div className="col-md-2">
             <Form.Check
               type="checkbox"
@@ -309,14 +386,17 @@ const ProductManagement = () => {
           </div>
           <div className="col-md-2">
             <Button type="submit" variant="success" disabled={isUploading}>
-              {isUploading ? "Uploading..." : "Add Product"}
+              {isUploading ? (
+                <div className="button-spinner"></div>
+              ) : (
+                "Add Product"
+              )}
             </Button>
           </div>
         </div>
       </Form>
 
       <Tabs defaultActiveKey="active" id="product-tabs" className="mb-3">
-        {/* Tab sản phẩm đang hoạt động */}
         <Tab eventKey="active" title="Active Products">
           <Table striped bordered hover>
             <thead>
@@ -327,21 +407,57 @@ const ProductManagement = () => {
                 <th>Category</th>
                 <th>Seller</th>
                 <th>Image</th>
+                <th>Description</th>
                 <th>Active</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {paginate(products, page).map((product) => (
+              {paginate(filteredProducts, page).map((product) => (
                 <tr key={product.id}>
                   <td>{product.name}</td>
                   <td>${product.price}</td>
                   <td>{product.stock}</td>
-                  <td>{categories.find((cat) => cat.id === product.category_id)?.name || "N/A"}</td>
-                  <td>{sellers.find((seller) => seller.id === product.seller_id)?.username || "N/A"}</td>
+                  <td>
+                    {categories.find((cat) => cat.id === product.category_id)?.name || "N/A"}
+                  </td>
+                  <td>
+                    {sellers.find((seller) => seller.id === product.seller_id)?.username ||
+                      "N/A"}
+                  </td>
                   <td>
                     {product.image_url && (
-                      <img src={product.image_url} alt={product.name} style={{ width: "50px" }} />
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        style={{ width: "50px" }}
+                      />
+                    )}
+                  </td>
+                  <td>
+                    {product.description?.length > 50 ? (
+                      <OverlayTrigger
+                        placement="top"
+                        overlay={
+                          <Tooltip>
+                            <div
+                              dangerouslySetInnerHTML={{
+                                __html: product.description,
+                              }}
+                            />
+                          </Tooltip>
+                        }
+                      >
+                        <span>
+                          {product.description.replace(/<[^>]+>/g, "").slice(0, 50)}...
+                        </span>
+                      </OverlayTrigger>
+                    ) : (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: product.description || "No description",
+                        }}
+                      />
                     )}
                   </td>
                   <td>{product.is_active ? "Yes" : "No"}</td>
@@ -368,17 +484,15 @@ const ProductManagement = () => {
               ))}
             </tbody>
           </Table>
-
           <Pagination>
             <Pagination.Prev disabled={page === 1} onClick={() => setPage(page - 1)} />
             <Pagination.Next
-              disabled={page * itemsPerPage >= products.length}
+              disabled={page * itemsPerPage >= filteredProducts.length}
               onClick={() => setPage(page + 1)}
             />
           </Pagination>
         </Tab>
 
-        {/* Tab sản phẩm đã xóa */}
         <Tab eventKey="deleted" title="Deleted Products">
           <Table striped bordered hover>
             <thead>
@@ -389,21 +503,57 @@ const ProductManagement = () => {
                 <th>Category</th>
                 <th>Seller</th>
                 <th>Image</th>
+                <th>Description</th>
                 <th>Active</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {paginate(deletedProducts, deletedPage).map((product) => (
+              {paginate(filteredDeletedProducts, deletedPage).map((product) => (
                 <tr key={product.id}>
                   <td>{product.name}</td>
                   <td>${product.price}</td>
                   <td>{product.stock}</td>
-                  <td>{categories.find((cat) => cat.id === product.category_id)?.name || "N/A"}</td>
-                  <td>{sellers.find((seller) => seller.id === product.seller_id)?.username || "N/A"}</td>
+                  <td>
+                    {categories.find((cat) => cat.id === product.category_id)?.name || "N/A"}
+                  </td>
+                  <td>
+                    {sellers.find((seller) => seller.id === product.seller_id)?.username ||
+                      "N/A"}
+                  </td>
                   <td>
                     {product.image_url && (
-                      <img src={product.image_url} alt={product.name} style={{ width: "50px" }} />
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        style={{ width: "50px" }}
+                      />
+                    )}
+                  </td>
+                  <td>
+                    {product.description?.length > 50 ? (
+                      <OverlayTrigger
+                        placement="top"
+                        overlay={
+                          <Tooltip>
+                            <div
+                              dangerouslySetInnerHTML={{
+                                __html: product.description,
+                              }}
+                            />
+                          </Tooltip>
+                        }
+                      >
+                        <span>
+                          {product.description.replace(/<[^>]+>/g, "").slice(0, 50)}...
+                        </span>
+                      </OverlayTrigger>
+                    ) : (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: product.description || "No description",
+                        }}
+                      />
                     )}
                   </td>
                   <td>{product.is_active ? "Yes" : "No"}</td>
@@ -419,11 +569,13 @@ const ProductManagement = () => {
               ))}
             </tbody>
           </Table>
-
           <Pagination>
-            <Pagination.Prev disabled={deletedPage === 1} onClick={() => setDeletedPage(deletedPage - 1)} />
+            <Pagination.Prev
+              disabled={deletedPage === 1}
+              onClick={() => setDeletedPage(deletedPage - 1)}
+            />
             <Pagination.Next
-              disabled={deletedPage * itemsPerPage >= deletedProducts.length}
+              disabled={deletedPage * itemsPerPage >= filteredDeletedProducts.length}
               onClick={() => setDeletedPage(deletedPage + 1)}
             />
           </Pagination>
@@ -453,7 +605,10 @@ const ProductManagement = () => {
                   type="number"
                   value={editingProduct.price}
                   onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) })
+                    setEditingProduct({
+                      ...editingProduct,
+                      price: parseFloat(e.target.value),
+                    })
                   }
                 />
               </Form.Group>
@@ -463,7 +618,10 @@ const ProductManagement = () => {
                   type="number"
                   value={editingProduct.stock}
                   onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, stock: parseInt(e.target.value) })
+                    setEditingProduct({
+                      ...editingProduct,
+                      stock: parseInt(e.target.value),
+                    })
                   }
                 />
               </Form.Group>
@@ -472,7 +630,10 @@ const ProductManagement = () => {
                 <Form.Select
                   value={editingProduct.category_id}
                   onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, category_id: e.target.value })
+                    setEditingProduct({
+                      ...editingProduct,
+                      category_id: e.target.value,
+                    })
                   }
                 >
                   <option value="">Select Category</option>
@@ -488,7 +649,10 @@ const ProductManagement = () => {
                 <Form.Select
                   value={editingProduct.seller_id}
                   onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, seller_id: e.target.value })
+                    setEditingProduct({
+                      ...editingProduct,
+                      seller_id: e.target.value,
+                    })
                   }
                 >
                   <option value="">Select Seller</option>
@@ -505,7 +669,10 @@ const ProductManagement = () => {
                   type="text"
                   value={editingProduct.image_url}
                   onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, image_url: e.target.value })
+                    setEditingProduct({
+                      ...editingProduct,
+                      image_url: e.target.value,
+                    })
                   }
                 />
                 <Form.Control
@@ -523,12 +690,26 @@ const ProductManagement = () => {
                 )}
               </Form.Group>
               <Form.Group className="mb-3">
+                <Form.Label>Description</Form.Label>
+                <ReactQuill
+                  value={editingProduct.description || ""}
+                  onChange={(value) =>
+                    setEditingProduct({ ...editingProduct, description: value })
+                  }
+                  modules={quillModules}
+                  style={{ height: "100px", marginBottom: "40px" }}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
                 <Form.Check
                   type="checkbox"
                   label="Active"
                   checked={editingProduct.is_active}
                   onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, is_active: e.target.checked })
+                    setEditingProduct({
+                      ...editingProduct,
+                      is_active: e.target.checked,
+                    })
                   }
                 />
               </Form.Group>
@@ -539,8 +720,16 @@ const ProductManagement = () => {
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Close
           </Button>
-          <Button variant="primary" onClick={handleEditProduct} disabled={isUploading}>
-            {isUploading ? "Uploading..." : "Save Changes"}
+          <Button
+            variant="primary"
+            onClick={handleEditProduct}
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <div className="button-spinner"></div>
+            ) : (
+              "Save Changes"
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

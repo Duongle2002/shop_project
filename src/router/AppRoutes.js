@@ -54,9 +54,9 @@ const AppRoutes = ({ user }) => {
       <Route
         path="/about"
         element={
-          <ProtectedRoute user={user}>
+          // <ProtectedRoute user={user}>
             <About />
-          </ProtectedRoute>
+        // </ProtectedRoute>
         }
       />
       <Route

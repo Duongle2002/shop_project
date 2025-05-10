@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
-import { db } from "../../config/firebase";
+
 import { Table, Button, Form, Modal, Pagination } from "react-bootstrap";
-import { useTranslation } from "react-i18next";
+import { db } from "../../config/firebase";
 
 const CategoryManagement = () => {
-  const { t } = useTranslation();
   const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState({
     name: "",
@@ -23,11 +22,10 @@ const CategoryManagement = () => {
         setCategories(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
       } catch (error) {
         console.error("Error fetching categories:", error);
-        alert(t("admin.categories.fetchError"));
       }
     };
     fetchCategories();
-  }, [t]);
+  }, []);
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
@@ -37,10 +35,9 @@ const CategoryManagement = () => {
       });
       setCategories([...categories, { id: categoryRef.id, ...newCategory }]);
       setNewCategory({ name: "", description: "" });
-      alert(t("admin.categories.addSuccess"));
+      alert("Category added successfully!");
     } catch (error) {
       console.error("Error adding category:", error);
-      alert(t("admin.categories.addError"));
     }
   };
 
@@ -49,22 +46,20 @@ const CategoryManagement = () => {
       await updateDoc(doc(db, "categories", editingCategory.id), editingCategory);
       setCategories(categories.map((c) => (c.id === editingCategory.id ? editingCategory : c)));
       setShowModal(false);
-      alert(t("admin.categories.updateSuccess"));
+      alert("Category updated successfully!");
     } catch (error) {
       console.error("Error updating category:", error);
-      alert(t("admin.categories.updateError"));
     }
   };
 
   const handleDeleteCategory = async (id) => {
-    if (window.confirm(t("admin.categories.confirmDelete"))) {
+    if (window.confirm("Are you sure you want to delete this category?")) {
       try {
         await deleteDoc(doc(db, "categories", id));
         setCategories(categories.filter((c) => c.id !== id));
-        alert(t("admin.categories.deleteSuccess"));
+        alert("Category deleted successfully!");
       } catch (error) {
         console.error("Error deleting category:", error);
-        alert(t("admin.categories.deleteError"));
       }
     }
   };
@@ -74,13 +69,13 @@ const CategoryManagement = () => {
 
   return (
     <div className="container my-5">
-      <h3>{t("admin.categories.title")}</h3>
+      <h3>Category Management</h3>
       <Form onSubmit={handleAddCategory} className="mb-4">
         <div className="row">
           <div className="col-md-3">
             <Form.Control
               type="text"
-              placeholder={t("admin.categories.namePlaceholder")}
+              placeholder="Name"
               value={newCategory.name}
               onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
               required
@@ -89,13 +84,13 @@ const CategoryManagement = () => {
           <div className="col-md-5">
             <Form.Control
               type="text"
-              placeholder={t("admin.categories.descriptionPlaceholder")}
+              placeholder="Description"
               value={newCategory.description}
               onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
             />
           </div>
           <div className="col-md-2">
-            <Button type="submit" variant="success">{t("admin.categories.addButton")}</Button>
+            <Button type="submit" variant="success">Add Category</Button>
           </div>
         </div>
       </Form>
@@ -103,9 +98,9 @@ const CategoryManagement = () => {
       <Table striped bordered hover>
         <thead>
           <tr>
-            <th>{t("admin.categories.nameColumn")}</th>
-            <th>{t("admin.categories.descriptionColumn")}</th>
-            <th>{t("admin.categories.actionsColumn")}</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -122,13 +117,13 @@ const CategoryManagement = () => {
                     setShowModal(true);
                   }}
                 >
-                  {t("admin.categories.editButton")}
+                  Edit
                 </Button>
                 <Button
                   variant="danger"
                   onClick={() => handleDeleteCategory(category.id)}
                 >
-                  {t("admin.categories.deleteButton")}
+                  Delete
                 </Button>
               </td>
             </tr>
@@ -149,13 +144,13 @@ const CategoryManagement = () => {
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{t("admin.categories.editModalTitle")}</Modal.Title>
+          <Modal.Title>Edit Category</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {editingCategory && (
             <Form>
               <Form.Group className="mb-3">
-                <Form.Label>{t("admin.categories.nameLabel")}</Form.Label>
+                <Form.Label>Name</Form.Label>
                 <Form.Control
                   type="text"
                   value={editingCategory.name}
@@ -165,7 +160,7 @@ const CategoryManagement = () => {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>{t("admin.categories.descriptionLabel")}</Form.Label>
+                <Form.Label>Description</Form.Label>
                 <Form.Control
                   type="text"
                   value={editingCategory.description}
@@ -179,10 +174,10 @@ const CategoryManagement = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
-            {t("admin.categories.closeButton")}
+            Close
           </Button>
           <Button variant="primary" onClick={handleEditCategory}>
-            {t("admin.categories.saveButton")}
+            Save Changes
           </Button>
         </Modal.Footer>
       </Modal>

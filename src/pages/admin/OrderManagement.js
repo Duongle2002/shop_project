@@ -37,6 +37,7 @@ const OrderManagement = () => {
         return;
       }
 
+      console.log("Người dùng hiện tại:", user.uid, user.email);
       const userDoc = await getDoc(doc(db, "users", user.uid));
       if (!userDoc.exists() || userDoc.data().role !== "admin") {
         setError("Bạn cần có quyền admin để truy cập trang này");
@@ -46,28 +47,61 @@ const OrderManagement = () => {
       const ordersSnapshot = await getDocs(collection(db, "orders"));
       const ordersData = [];
 
+      // Gom customer_id
+      const customerIds = ordersSnapshot.docs
+        .map(doc => doc.data().customer_id)
+        .filter(id => id);
+      const uniqueCustomerIds = [...new Set(customerIds)];
+      const userDocs = await Promise.all(
+        uniqueCustomerIds.map(id => getDoc(doc(db, "users", id)))
+      );
+      const userMap = {};
+      userDocs.forEach((userDoc, index) => {
+        if (userDoc.exists()) {
+          userMap[uniqueCustomerIds[index]] = userDoc.data();
+        }
+      });
+
       for (const orderDoc of ordersSnapshot.docs) {
         const orderData = orderDoc.data();
-        const userDoc = await getDoc(doc(db, "users", orderData.user_id));
-        const userData = userDoc.exists() ? userDoc.data() : null;
+        console.log("Order data:", orderData);
+
+        if (!orderData.customer_id) {
+          console.warn(`Order ${orderDoc.id} missing customer_id`);
+          continue;
+        }
+
+        // Chuyển đổi created_at
+        if (orderData.order_date && typeof orderData.order_date === 'string') {
+          orderData.created_at = orderData.order_date;
+        } else if (orderData.order_date && orderData.order_date.toDate) {
+          orderData.created_at = orderData.order_date.toDate().toISOString();
+        } else {
+          orderData.created_at = new Date().toISOString();
+        }
 
         ordersData.push({
           id: orderDoc.id,
           ...orderData,
-          user: userData
+          user: userMap[orderData.customer_id] || null,
+          total: orderData.total_amount,
+          status: orderData.status.toLowerCase(),
+          items: orderData.order_details
         });
       }
 
-      setOrders(ordersData.sort((a, b) => b.created_at.localeCompare(a.created_at)));
+      const validOrders = ordersData.filter(order => typeof order.created_at === 'string');
+      setOrders(validOrders.sort((a, b) => b.created_at.localeCompare(a.created_at)));
     } catch (error) {
-      console.error("Đã xảy ra lỗi"), error;
-      setError("Đã xảy ra lỗi");
+      console.error("Lỗi trong fetchOrders:", error.message, error.code, error.stack);
+      setError(`Đã xảy ra lỗi: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    if (user === null || user === undefined) return;
     fetchOrders();
   }, [user]);
 
@@ -75,7 +109,7 @@ const OrderManagement = () => {
     try {
       await updateDoc(doc(db, "orders", orderId), {
         status: newStatus,
-        payment_status: newPaymentStatus,
+        payment_status: newPaymentStatus || "pending",
         updated_at: new Date().toISOString()
       });
       
@@ -83,8 +117,8 @@ const OrderManagement = () => {
       fetchOrders();
       setShowModal(false);
     } catch (error) {
-      console.error("Đã xảy ra lỗi"), error;
-      setError("Đã xảy ra lỗi");
+      console.error("Lỗi khi cập nhật trạng thái:", error.message, error.code, error.stack);
+      setError(`Đã xảy ra lỗi: ${error.message}`);
     }
   };
 
@@ -98,7 +132,7 @@ const OrderManagement = () => {
   if (error) return <Alert variant="danger">{error}</Alert>;
 
   return (
-    <div className="order-management-container">
+    <div className="container order-management-container">
       <h3>Quản lý đơn hàng</h3>
       <Table striped bordered hover responsive>
         <thead>
@@ -120,17 +154,17 @@ const OrderManagement = () => {
                 {order.user ? (
                   <div>
                     <div className="fw-bold">
-                      {order.user.username || order.user.email?.split('@')[0] || "Khách hàng không biết"}
+                      {order.user.username || (order.user.email && order.user.email.split('@')[0]) || order.receiver_name || "Khách hàng không biết"}
                     </div>
                     <small className="text-muted">
                       {order.user.email || "Khách hàng không có email"}
                     </small>
                   </div>
                 ) : (
-                  "Khách hàng không biết"
+                  order.receiver_name || "Khách hàng không biết"
                 )}
               </td>
-              <td>{order.total.toLocaleString()}đ</td>
+              <td>{order.total_amount.toLocaleString()}đ</td>
               <td>
                 <span className={`badge bg-${
                   order.status === 'delivered' ? 'success' :
@@ -138,22 +172,16 @@ const OrderManagement = () => {
                   'warning'
                 }`}>
                   {order.status === 'delivered' ? 'Đã giao hàng' :
-                  order.status === 'cancelled' ? 'Đã hủy' :
-                  'Đang chờ xử lý'}
+                   order.status === 'cancelled' ? 'Đã hủy' :
+                   order.status === 'pending' ? 'Đang chờ xử lý' : order.status}
                 </span>
               </td>
               <td>
-                <span className={`badge bg-${
-                  order.payment_status === 'paid' ? 'success' :
-                  order.payment_status === 'failed' ? 'danger' :
-                  'warning'
-                }`}>
-                  {order.payment_status === 'paid' ? 'Đã thanh toán' :
-                  order.payment_status === 'failed' ? 'Thanh toán thất bại' :
-                  'Chờ thanh toán'}
+                <span className={`badge bg-warning`}>
+                  Chờ thanh toán {/* Cập nhật nếu có payment_status */}
                 </span>
               </td>
-              <td>{new Date(order.created_at).toLocaleString()}</td>
+              <td>{order.order_date ? new Date(order.order_date).toLocaleString() : 'Không xác định'}</td>
               <td>
                 <Button
                   variant="info"
@@ -181,13 +209,13 @@ const OrderManagement = () => {
                   {selectedOrder.user ? (
                     <>
                       <strong>
-                        {selectedOrder.user.username || selectedOrder.user.email?.split('@')[0]}
+                        {selectedOrder.user.username || (selectedOrder.user.email && selectedOrder.user.email.split('@')[0]) || selectedOrder.receiver_name || "Khách hàng không biết"}
                       </strong>
                       <br />
-                      <small className="text-muted">{selectedOrder.user.email}</small>
+                      <small className="text-muted">{selectedOrder.user.email || "Không có email"}</small>
                     </>
                   ) : (
-                    "Khách hàng không biết"
+                    selectedOrder.receiver_name || "Khách hàng không biết"
                   )}
                 </p>
               </div>
@@ -196,7 +224,7 @@ const OrderManagement = () => {
                 <h5>Trạng thái đơn hàng</h5>
                 <Form.Select
                   value={selectedOrder.status}
-                  onChange={(e) => handleUpdateStatus(selectedOrder.id, e.target.value, selectedOrder.payment_status)}
+                  onChange={(e) => handleUpdateStatus(selectedOrder.id, e.target.value, selectedOrder.payment_status || "pending")}
                   className="mb-3"
                 >
                   {statusOptions.map(option => (
@@ -208,7 +236,7 @@ const OrderManagement = () => {
 
                 <h5>Trạng thái thanh toán</h5>
                 <Form.Select
-                  value={selectedOrder.payment_status}
+                  value={selectedOrder.payment_status || "pending"}
                   onChange={(e) => handleUpdateStatus(selectedOrder.id, selectedOrder.status, e.target.value)}
                 >
                   {paymentStatusOptions.map(option => (
@@ -231,9 +259,9 @@ const OrderManagement = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedOrder.items.map((item, index) => (
+                    {selectedOrder.order_details.map((item, index) => (
                       <tr key={index}>
-                        <td>{item.product_name}</td>
+                        <td>{item.product_id}</td> {/* Thay bằng product_name nếu có */}
                         <td>{item.quantity}</td>
                         <td>{item.price.toLocaleString()}đ</td>
                         <td>{(item.price * item.quantity).toLocaleString()}đ</td>
@@ -244,7 +272,7 @@ const OrderManagement = () => {
                         Tổng cộng
                       </td>
                       <td className="fw-bold">
-                        {selectedOrder.total.toLocaleString()}đ
+                        {selectedOrder.total_amount.toLocaleString()}đ
                       </td>
                     </tr>
                   </tbody>
