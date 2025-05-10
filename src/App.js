@@ -6,7 +6,6 @@ import NavigationBar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { auth } from "./config/firebase"; // Đảm bảo đường dẫn đúng đến file firebase.js
 import { initAuthSync } from "./hooks/authSync";
-import { LanguageProvider } from "./contexts/LanguageContext";
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -30,13 +29,11 @@ const App = () => {
   }
 
   return (
-    <LanguageProvider>
-      <Router>
-        <NavigationBar user={user} />
-        <AppRoutes user={user} />
-        <Footer />
-      </Router>
-    </LanguageProvider>
+    <Router>
+      <NavigationBar user={user} />
+      <AppRoutes user={user} />
+      <Footer />
+    </Router>
   );
 };
 

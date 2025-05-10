@@ -4,8 +4,6 @@ import { collection, getDocs, doc, deleteDoc, getDoc } from "firebase/firestore"
 import { useAuthState } from "react-firebase-hooks/auth";
 import { Table, Button, Modal, Alert } from "react-bootstrap";
 import { auth, db } from "../../config/firebase";
-import { useNavigate } from "react-router-dom";
-import { useLanguage } from "../../contexts/LanguageContext";
 import "../../assets/styles/cartManagement.css";
 
 const CartManagement = () => {
@@ -17,8 +15,6 @@ const CartManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user] = useAuthState(auth);
-  const navigate = useNavigate();
-  const { t } = useLanguage();
 
   // Lấy dữ liệu từ Firestore
   const fetchData = async () => {
@@ -27,14 +23,13 @@ const CartManagement = () => {
     try {
       // Kiểm tra quyền admin
       if (!user) {
-        setError(t('admin.loginRequired'));
-        setLoading(false);
+        setError("Vui lòng đăng nhập để tiếp tục");
         return;
       }
 
       const userDoc = await getDoc(doc(db, "users", user.uid));
       if (!userDoc.exists() || userDoc.data().role !== "admin") {
-        setError(t('admin.adminRequired'));
+        setError("Bạn không có quyền truy cập vào trang này");
         return;
       }
 
@@ -77,8 +72,8 @@ const CartManagement = () => {
       
       setCarts(cartData);
     } catch (error) {
-      console.error(t('admin.error'), error);
-      setError(t('admin.error'));
+      console.error("Lỗi khi lấy dữ liệu:", error);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -86,7 +81,7 @@ const CartManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [user, t]);
+  }, [user]);
 
   // Xóa một sản phẩm khỏi giỏ hàng
   const handleRemoveItem = async (cartId, itemId) => {
@@ -103,7 +98,7 @@ const CartManagement = () => {
 
   // Xóa toàn bộ giỏ hàng của người dùng
   const handleDeleteCart = async (cartId) => {
-    if (window.confirm(t('admin.confirmDelete'))) {
+    if (window.confirm("Bạn có chắc chắn muốn xóa giỏ hàng này không?")) {
       try {
         const itemsSnapshot = await getDocs(collection(db, "carts", cartId, "items"));
         const deletePromises = itemsSnapshot.docs.map((itemDoc) =>
@@ -113,10 +108,9 @@ const CartManagement = () => {
         await deleteDoc(doc(db, "carts", cartId));
         await fetchData();
         setShowModal(false);
-        alert(t('admin.deleteSuccess'));
       } catch (error) {
-        console.error(t('admin.error'), error);
-        setError(t('admin.error'));
+        console.error("Lỗi khi xóa giỏ hàng:", error);
+        setError(error.message);
       }
     }
   };
@@ -128,17 +122,7 @@ const CartManagement = () => {
   };
 
   if (loading) {
-    return <div className="loading">{t('cart.loading')}</div>;
-  }
-
-  if (!user) {
-    return (
-      <div className="cart-container">
-        <Alert variant="warning">
-          {t('admin.loginRequired')}
-        </Alert>
-      </div>
-    );
+    return <div className="loading">Đang tải dữ liệu...</div>;
   }
 
   if (error) {
@@ -147,15 +131,15 @@ const CartManagement = () => {
 
   return (
     <div className="cart-management-container">
-      <h3>{t('admin.carts')}</h3>
+      <h3>Quản lý giỏ hàng</h3>
       {error && <Alert variant="danger">{error}</Alert>}
       <Table striped bordered hover>
         <thead>
           <tr>
-            <th>{t('admin.cart.user')}</th>
-            <th>{t('admin.table.createdAt')}</th>
-            <th>{t('admin.cart.items')}</th>
-            <th>{t('admin.table.action')}</th>
+            <th>Người dùng</th>
+            <th>Thời gian tạo</th>
+            <th>Số lượng sản phẩm</th>
+            <th>Hành động</th>
           </tr>
         </thead>
         <tbody>
@@ -165,18 +149,17 @@ const CartManagement = () => {
             return (
               <tr key={cart.id}>
                 <td>
-                  <div>
-                    <div className="fw-bold">
-                      {userInfo ? (
-                        userInfo.username || userInfo.email?.split('@')[0]
-                      ) : (
-                        t('cart.loginRequired')
-                      )}
+                  {userInfo ? (
+                    <div>
+                      <div className="fw-bold">{userInfo.username || userInfo.email?.split('@')[0] || "Người dùng không xác định"}</div>
+                      <small className="text-muted">{userInfo.email || "Chưa có email"}</small>
                     </div>
-                    <small className="text-muted">
-                      {userInfo?.email || userInfo?.user_id}
-                    </small>
-                  </div>
+                  ) : (
+                    <div>
+                      <div className="fw-bold">Người dùng không xác định</div>
+                      <small className="text-muted">ID: {cart.user_id}</small>
+                    </div>
+                  )}
                 </td>
                 <td>{new Date(cart.created_at).toLocaleString()}</td>
                 <td>{cart.items.length}</td>
@@ -186,13 +169,13 @@ const CartManagement = () => {
                     className="me-2"
                     onClick={() => handleViewCart(cart)}
                   >
-                    {t('admin.cart.viewCart')}
+                    Xem chi tiết
                   </Button>
                   <Button
                     variant="danger"
                     onClick={() => handleDeleteCart(cart.id)}
                   >
-                    {t('admin.cart.deleteCart')}
+                    Xóa giỏ hàng
                   </Button>
                 </td>
               </tr>
@@ -204,7 +187,7 @@ const CartManagement = () => {
       {/* Modal hiển thị chi tiết giỏ hàng */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>{t('admin.cart.viewCart')}</Modal.Title>
+          <Modal.Title>Chi tiết giỏ hàng</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedCart && (
@@ -214,16 +197,12 @@ const CartManagement = () => {
                   const userInfo = users.find((u) => u.user_id === selectedCart.user_id || u.id === selectedCart.user_id);
                   return userInfo ? (
                     <div>
-                      <div className="fw-bold">
-                        {userInfo.username || userInfo.email?.split('@')[0] || t('admin.customer.unknown')}
-                      </div>
-                      <small className="text-muted">
-                        {userInfo.email || t('admin.customer.noEmail')}
-                      </small>
+                      <div className="fw-bold">{userInfo.username || userInfo.email?.split('@')[0] || "Người dùng không xác định"}</div>
+                      <small className="text-muted">{userInfo.email || "Chưa có email"}</small>
                     </div>
                   ) : (
                     <div>
-                      <div className="fw-bold">{t('admin.customer.unknown')}</div>
+                      <div className="fw-bold">Người dùng không xác định</div>
                       <small className="text-muted">ID: {selectedCart.user_id}</small>
                     </div>
                   );
@@ -232,12 +211,12 @@ const CartManagement = () => {
               <Table striped bordered hover>
                 <thead>
                   <tr>
-                    <th>{t('admin.product.name')}</th>
-                    <th>{t('admin.product.image')}</th>
-                    <th>{t('admin.table.quantity')}</th>
-                    <th>{t('admin.table.price')}</th>
-                    <th>{t('admin.table.createdAt')}</th>
-                    <th>{t('admin.table.action')}</th>
+                    <th>Sản phẩm</th>
+                    <th>Hình ảnh</th>
+                    <th>Số lượng</th>
+                    <th>Giá</th>
+                    <th>Thời gian thêm</th>
+                    <th>Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -245,7 +224,7 @@ const CartManagement = () => {
                     const product = products.find((p) => p.id === item.product_id);
                     return (
                       <tr key={item.id}>
-                        <td>{product ? product.name : t('admin.product.notFound')}</td>
+                        <td>{product ? product.name : "Không tìm thấy sản phẩm"}</td>
                         <td>
                           {product && product.image_url ? (
                             <img
@@ -254,18 +233,18 @@ const CartManagement = () => {
                               style={{ width: "50px" }}
                             />
                           ) : (
-                            t('admin.product.noImage')
+                            "Không có hình ảnh"
                           )}
                         </td>
                         <td>{item.quantity}</td>
-                        <td>{product ? `${product.price.toLocaleString()}đ` : "N/A"}</td>
+                        <td>{product ? `$${product.price}` : "N/A"}</td>
                         <td>{new Date(item.added_at).toLocaleString()}</td>
                         <td>
                           <Button
                             variant="danger"
                             onClick={() => handleRemoveItem(selectedCart.id, item.id)}
                           >
-                            {t('admin.delete')}
+                            Xóa
                           </Button>
                         </td>
                       </tr>
@@ -278,7 +257,7 @@ const CartManagement = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
-            {t('admin.cancel')}
+            Đóng
           </Button>
         </Modal.Footer>
       </Modal>
