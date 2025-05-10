@@ -1,0 +1,87 @@
+.container {
+  max-width: 1400px;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  font-size: 1.2em;
+}
+
+.table img {
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.badge {
+  padding: 8px 12px;
+  font-size: 0.9em;
+}
+
+.form-control, .form-select {
+  margin-bottom: 10px;
+}
+
+.btn {
+  margin: 2px;
+}
+
+.modal-body {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.preview-image {
+  max-width: 200px;
+  margin-top: 10px;
+  border-radius: 4px;
+}
+
+.nav-tabs {
+  margin-bottom: 20px;
+}
+
+.table th {
+  background-color: #f8f9fa;
+  white-space: nowrap;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.pagination {
+  margin-top: 20px;
+  justify-content: center;
+} 
+/* ProductManagement.css */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.button-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #ffffff;
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

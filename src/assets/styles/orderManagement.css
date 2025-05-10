@@ -1,0 +1,40 @@
+.order-management-container {
+  padding: 10px;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  font-size: 1.2em;
+}
+
+.badge {
+  padding: 8px 12px;
+  font-size: 0.9em;
+}
+
+.modal-body h5 {
+  margin-top: 15px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.table th {
+  background-color: #f8f9fa;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.btn-info {
+  color: #fff;
+}
+
+.text-muted {
+  font-size: 0.9em;
+}
+
+.fw-bold {
+  font-weight: 600;
+} 

@@ -32,6 +32,7 @@ const Products = () => {
 
   return (
     <div className="products-container">
+      {/* All Products Section */}
       <div className="products-section">
         <div className="products-header">
           <h3 className="just-for-you-title">
