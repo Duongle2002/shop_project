@@ -34,7 +34,7 @@ const AppRoutes = ({ user }) => {
         }
       />
       <Route
-        path="/product/:id"
+        path="/products/:id"
         element={
           // <ProtectedRoute user={user}>
             <ProductDetail />

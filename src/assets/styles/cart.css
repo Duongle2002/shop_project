@@ -184,3 +184,133 @@
     grid-template-columns: 1fr; /* Stack sections on smaller screens */
   }
 }
+.cart-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.cart-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.cart-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.cart-items-section {
+  flex: 2;
+}
+
+.cart-summary-section {
+  flex: 1;
+}
+
+.product-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.product-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+}
+
+.product-details {
+  flex: 1;
+}
+
+.quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.quantity-input {
+  width: 60px;
+  text-align: center;
+}
+
+.remove-item-button {
+  margin-left: 10px;
+}
+
+.cart-actions-top {
+  margin-bottom: 20px;
+}
+
+.coupon-section {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.coupon-section input {
+  max-width: 200px;
+}
+
+.apply-coupon-button,
+.remove-coupon-button {
+  padding: 5px 15px;
+}
+
+.cart-total-box {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.summary-item.discount {
+  color: green;
+}
+
+.summary-item.total {
+  font-weight: bold;
+  border-top: 1px solid #dee2e6;
+  padding-top: 10px;
+}
+
+.checkout-button {
+  width: 100%;
+  margin-top: 20px;
+}
+
+/* Kiểu cho modal */
+.modal {
+  z-index: 1050;
+}
+
+.modal-dialog-centered {
+  display: flex;
+  align-items: center;
+  min-height: calc(100% - 1rem);
+}
+
+/* Kiểu cho Toast */
+.toast-container {
+  z-index: 1060;
+}
+
+.toast {
+  min-width: 300px;
+}
+
+.toast-header {
+  font-size: 14px;
+}
+
+.toast-body {
+  font-size: 14px;
+}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { doc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, query, where, addDoc, setDoc, updateDoc } from "firebase/firestore";
 import {
   Row,
   Col,
@@ -9,9 +9,11 @@ import {
   Badge,
   Form,
   ListGroup,
+  Toast,
+  ToastContainer,
 } from "react-bootstrap";
-import { db } from "../config/firebase";
-import "../assets/styles/ProductDetail.css"; // File CSS cho spinner và tùy chỉnh
+import { db, auth } from "../config/firebase";
+import "../assets/styles/ProductDetail.css";
 import { FaStar, FaHeart } from "react-icons/fa";
 
 const ProductDetail = () => {
@@ -23,6 +25,19 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [toasts, setToasts] = useState([]);
+
+  // Hàm hiển thị Toast
+  const showToast = (message, variant = "success") => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, variant }]);
+    setTimeout(() => removeToast(id), 3000);
+  };
+
+  // Hàm xóa Toast
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -40,8 +55,8 @@ const ProductDetail = () => {
           .map((doc) => ({ id: doc.id, ...doc.data() }));
         setReviews(reviewList);
 
-        // Lấy sản phẩm liên quan (cùng category_id, không bị xóa, đang active)
-        if (productDoc.exists()) {
+        // Lấy sản phẩm liên quan
+        if (productDoc.exists() && productDoc.data().category_id) {
           const relatedQuery = query(
             collection(db, "products"),
             where("category_id", "==", productDoc.data().category_id),
@@ -52,11 +67,12 @@ const ProductDetail = () => {
           const relatedList = relatedSnapshot.docs
             .map((doc) => ({ id: doc.id, ...doc.data() }))
             .filter((p) => p.id !== id)
-            .slice(0, 4); // Lấy tối đa 4 sản phẩm
+            .slice(0, 4);
           setRelatedProducts(relatedList);
         }
       } catch (error) {
         console.error("Error fetching product:", error);
+        // showToast("Failed to load product details.", "danger");
       } finally {
         setLoading(false);
       }
@@ -66,6 +82,91 @@ const ProductDetail = () => {
 
   const handleQuantityChange = (change) => {
     setQuantity((prev) => Math.max(1, prev + change));
+  };
+
+  const handleAddToCart = async () => {
+    if (!auth.currentUser) {
+      showToast("Please log in to add items to your cart!", "warning");
+      return;
+    }
+    if (product.stock <= 0) {
+      showToast("This product is out of stock!", "danger");
+      return;
+    }
+    try {
+      const cartRef = doc(db, "carts", auth.currentUser.uid);
+      const cartSnap = await getDoc(cartRef);
+      if (!cartSnap.exists()) {
+        await setDoc(cartRef, {
+          user_id: auth.currentUser.uid,
+          created_at: new Date().toISOString(),
+        });
+      }
+      const itemsSnapshot = await getDocs(collection(db, "carts", auth.currentUser.uid, "items"));
+      const existingItem = itemsSnapshot.docs.find(
+        (doc) =>
+          doc.data().product_id === product.id &&
+          doc.data().color === selectedColor &&
+          doc.data().size === selectedSize
+      );
+      if (existingItem) {
+        await updateDoc(doc(db, "carts", auth.currentUser.uid, "items", existingItem.id), {
+          quantity: existingItem.data().quantity + quantity,
+        });
+      } else {
+        await addDoc(collection(db, "carts", auth.currentUser.uid, "items"), {
+          product_id: product.id,
+          quantity,
+          color: selectedColor,
+          size: selectedSize,
+          added_at: new Date().toISOString(),
+        });
+      }
+      showToast("Product added to cart successfully!", "success");
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      showToast("Failed to add product to cart.", "danger");
+    }
+  };
+
+  const handleAddRelatedToCart = async (related) => {
+    if (!auth.currentUser) {
+      showToast("Please log in to add items to your cart!", "warning");
+      return;
+    }
+    if (related.stock <= 0) {
+      showToast("This product is out of stock!", "danger");
+      return;
+    }
+    try {
+      const cartRef = doc(db, "carts", auth.currentUser.uid);
+      const cartSnap = await getDoc(cartRef);
+      if (!cartSnap.exists()) {
+        await setDoc(cartRef, {
+          user_id: auth.currentUser.uid,
+          created_at: new Date().toISOString(),
+        });
+      }
+      const itemsSnapshot = await getDocs(collection(db, "carts", auth.currentUser.uid, "items"));
+      const existingItem = itemsSnapshot.docs.find(
+        (doc) => doc.data().product_id === related.id
+      );
+      if (existingItem) {
+        await updateDoc(doc(db, "carts", auth.currentUser.uid, "items", existingItem.id), {
+          quantity: existingItem.data().quantity + 1,
+        });
+      } else {
+        await addDoc(collection(db, "carts", auth.currentUser.uid, "items"), {
+          product_id: related.id,
+          quantity: 1,
+          added_at: new Date().toISOString(),
+        });
+      }
+      showToast("Product added to cart successfully!", "success");
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      showToast("Failed to add product to cart.", "danger");
+    }
   };
 
   if (loading) {
@@ -91,8 +192,40 @@ const ProductDetail = () => {
     );
   }
 
+  const thumbnails = product.image_urls?.length > 0
+    ? product.image_urls
+    : [product.image_url || "https://via.placeholder.com/150"];
+  const averageRating = reviews.length > 0
+    ? Math.round(reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length)
+    : 0;
+
   return (
     <div className="container my-5">
+      {/* Toast Container */}
+      <ToastContainer position="top-end" className="p-3">
+        {toasts.map((toast) => (
+          <Toast
+            key={toast.id}
+            onClose={() => removeToast(toast.id)}
+            show={true}
+            delay={3000}
+            autohide
+            bg={toast.variant}
+          >
+            <Toast.Header>
+              <strong className="me-auto">
+                {toast.variant === "success"
+                  ? "Success"
+                  : toast.variant === "danger"
+                  ? "Error"
+                  : "Warning"}
+              </strong>
+            </Toast.Header>
+            <Toast.Body>{toast.message}</Toast.Body>
+          </Toast>
+        ))}
+      </ToastContainer>
+
       {/* Breadcrumb */}
       <nav aria-label="breadcrumb">
         <ol className="breadcrumb">
@@ -100,10 +233,10 @@ const ProductDetail = () => {
             <a href="/">Home</a>
           </li>
           <li className="breadcrumb-item">
-            <a href="/category">Category</a>
+            <a href="/products">Products</a>
           </li>
           <li className="breadcrumb-item active" aria-current="page">
-            Gaming
+            {product.category_id || "Gaming"}
           </li>
         </ol>
       </nav>
@@ -114,21 +247,19 @@ const ProductDetail = () => {
           <Row>
             <Col xs={3}>
               <div className="thumbnail-gallery">
-                {[product.image_url, product.image_url, product.image_url].map(
-                  (img, index) => (
-                    <img
-                      key={index}
-                      src={img}
-                      alt={`Thumbnail ${index + 1}`}
-                      className="thumbnail-img mb-2"
-                    />
-                  )
-                )}
+                {thumbnails.map((img, index) => (
+                  <img
+                    key={index}
+                    src={img}
+                    alt={`Thumbnail ${index + 1}`}
+                    className="thumbnail-img mb-2"
+                  />
+                ))}
               </div>
             </Col>
             <Col xs={9}>
               <img
-                src={product.image_url}
+                src={product.image_url || "https://via.placeholder.com/150"}
                 alt={product.name}
                 className="main-image"
               />
@@ -141,11 +272,7 @@ const ProductDetail = () => {
             {[...Array(5)].map((_, i) => (
               <FaStar
                 key={i}
-                className={
-                  i < Math.round(reviews.reduce((sum, r) => sum + r.rating, 0) / (reviews.length || 1))
-                    ? "text-warning"
-                    : "text-muted"
-                }
+                className={i < averageRating ? "text-warning" : "text-muted"}
               />
             ))}
             <span className="ms-2 text-muted">({reviews.length} Reviews)</span>
@@ -161,7 +288,9 @@ const ProductDetail = () => {
               </span>
             )}
           </h4>
-          <p className="text-muted">{product.description?.replace(/<[^>]+>/g, "") || "No description available."}</p>
+          <p className="text-muted">
+            {product.description?.replace(/<[^>]+>/g, "") || "No description available."}
+          </p>
 
           <hr />
 
@@ -214,8 +343,13 @@ const ProductDetail = () => {
             >
               +
             </Button>
-            <Button variant="danger" className="ms-3">
-              Buy Now
+            <Button
+              variant="primary"
+              className="ms-3"
+              onClick={handleAddToCart}
+              disabled={product.stock <= 0}
+            >
+              Add to Cart
             </Button>
             <Button variant="outline-secondary" className="ms-2">
               <FaHeart />
@@ -268,10 +402,13 @@ const ProductDetail = () => {
       {/* Related Items Section */}
       <h3 className="mt-5 mb-3 related-items-title">Related Items</h3>
       <Row>
-        {relatedProducts.map((related, index) => (
+        {relatedProducts.map((related) => (
           <Col md={3} key={related.id} className="mb-4">
             <Card className="related-product-card">
-              <Card.Img variant="top" src={related.image_url} />
+              <Card.Img
+                variant="top"
+                src={related.image_url || "https://via.placeholder.com/150"}
+              />
               <Card.Body>
                 <Card.Title>{related.name}</Card.Title>
                 <div className="d-flex align-items-center mb-2">
@@ -293,7 +430,12 @@ const ProductDetail = () => {
                     </span>
                   )}
                 </Card.Text>
-                <Button variant="outline-dark" size="sm">
+                <Button
+                  variant="outline-dark"
+                  size="sm"
+                  onClick={() => handleAddRelatedToCart(related)}
+                  disabled={related.stock <= 0}
+                >
                   Add To Cart
                 </Button>
                 <Button variant="outline-secondary" size="sm" className="ms-2">

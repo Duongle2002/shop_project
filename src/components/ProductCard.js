@@ -1,5 +1,4 @@
-// src/components/ProductCard.js
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../config/firebase";
@@ -12,14 +11,28 @@ import {
   getDocs,
   updateDoc,
 } from "firebase/firestore";
+import { Button, Toast, ToastContainer } from "react-bootstrap";
 import "../assets/styles/productCard.css";
 
 const ProductCard = ({ product }) => {
   const [user] = useAuthState(auth);
+  const [toasts, setToasts] = useState([]);
+
+  // Hàm hiển thị Toast
+  const showToast = (message, variant = "success") => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, variant }]);
+    setTimeout(() => removeToast(id), 3000);
+  };
+
+  // Hàm xóa Toast
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
 
   const handleAddToCart = async () => {
     if (!user) {
-      alert("Please log in to add items to your cart!");
+      showToast("Please log in to add items to your cart!", "warning");
       return;
     }
 
@@ -59,10 +72,10 @@ const ProductCard = ({ product }) => {
         });
       }
 
-      alert("Product added to cart successfully!");
+      showToast("Product added to cart successfully!", "success");
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert("Failed to add product to cart.");
+      showToast("Failed to add product to cart.", "danger");
     }
   };
 
@@ -96,14 +109,45 @@ const ProductCard = ({ product }) => {
         <div className="rating">★★★★☆</div>
 
         {/* Add to cart button */}
-        <button className="add-to-cart-btn" onClick={handleAddToCart}>
+        <Button
+          variant="primary"
+          className="add-to-cart-btn"
+          onClick={handleAddToCart}
+        >
           Add to Cart
-        </button>
+        </Button>
 
-        <Link to={`/product/${product.id}`}>
-          <button className="view-details-btn">View Details</button>
+        <Link to={`/products/${product.id}`}>
+          <Button variant="secondary" className="view-details-btn">
+            View Details
+          </Button>
         </Link>
       </div>
+
+      {/* Toast Container để hiển thị thông báo */}
+      <ToastContainer position="top-end" className="p-3">
+        {toasts.map((toast) => (
+          <Toast
+            key={toast.id}
+            onClose={() => removeToast(toast.id)}
+            show={true}
+            delay={3000}
+            autohide
+            bg={toast.variant}
+          >
+            <Toast.Header>
+              <strong className="me-auto">
+                {toast.variant === "success"
+                  ? "Success"
+                  : toast.variant === "danger"
+                  ? "Error"
+                  : "Warning"}
+              </strong>
+            </Toast.Header>
+            <Toast.Body>{toast.message}</Toast.Body>
+          </Toast>
+        ))}
+      </ToastContainer>
     </div>
   );
 };
